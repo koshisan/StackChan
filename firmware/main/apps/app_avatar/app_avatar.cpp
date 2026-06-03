@@ -83,8 +83,8 @@ void AppAvatar::onOpen()
     // Destroy loading page
     loading_page.reset();
 
-    // Create default avatar
-    auto avatar = std::make_unique<avatar::DefaultAvatar>();
+    // Create Aino-bot avatar (koshi fork; was DefaultAvatar upstream).
+    auto avatar = std::make_unique<avatar::AinoAvatar>();
     avatar->init(lv_screen_active());
     avatar->getPanel()->onClick().connect([&]() { _screen_clicked_flag = true; });
     GetStackChan().attachAvatar(std::move(avatar));
