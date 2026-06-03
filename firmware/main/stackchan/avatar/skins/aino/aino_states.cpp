@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: MIT
  */
 #include "aino_states.h"
+#include "aino_geometry.h"  // EYE_L / EYE_R
 
 namespace stackchan::avatar::aino {
 
