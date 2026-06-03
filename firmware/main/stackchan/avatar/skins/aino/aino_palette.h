@@ -19,35 +19,37 @@ struct Palette {
     lv_color_t bgDim;   // background on dark row (much darker)
 };
 
-// Helper: hex → lv_color_t. LVGL's lv_color_hex takes 0xRRGGBB.
-constexpr lv_color_t HEX(uint32_t rgb) {
+// Helper: hex → lv_color_t. lv_color_make is not constexpr in LVGL 9.4 so
+// HEX itself can't be constexpr; the palettes below are inline const and get
+// constructed once at program startup. No measurable runtime cost.
+inline lv_color_t HEX(uint32_t rgb) {
     return lv_color_make((rgb >> 16) & 0xff, (rgb >> 8) & 0xff, rgb & 0xff);
 }
 
 namespace palette {
 
 // yellow — default emission, used by Neutral / Happy / Sad / Doubt / Blink
-inline constexpr Palette yellow = {
+inline const Palette yellow = {
     HEX(0xfbcb21), HEX(0xefb817), HEX(0x431e0c), HEX(0x290d0a)
 };
 
 // bright — Excited, slightly warmer than yellow
-inline constexpr Palette bright = {
+inline const Palette bright = {
     HEX(0xffd23e), HEX(0xf3c42b), HEX(0x48270d), HEX(0x2c1408)
 };
 
 // red — Angry
-inline constexpr Palette red = {
+inline const Palette red = {
     HEX(0xff3a2a), HEX(0xef2a1c), HEX(0x3d130b), HEX(0x260a08)
 };
 
 // pink — Love
-inline constexpr Palette pink = {
+inline const Palette pink = {
     HEX(0xff5285), HEX(0xf53e74), HEX(0x3f1421), HEX(0x280b15)
 };
 
 // amber — Sleepy / Dead, dimmer than yellow
-inline constexpr Palette amber = {
+inline const Palette amber = {
     HEX(0xe3a528), HEX(0xd4961d), HEX(0x3a1d0a), HEX(0x250f07)
 };
 
