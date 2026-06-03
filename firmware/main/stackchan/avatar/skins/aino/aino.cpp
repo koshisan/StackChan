@@ -5,6 +5,7 @@
 #include "aino.h"
 #include "aino_states.h"
 
+#include <esp_log.h>
 #include <algorithm>
 
 using namespace uitk::lvgl_cpp;
@@ -16,15 +17,26 @@ using namespace stackchan::avatar::aino;
 // ============================================================================
 
 void AinoAvatar::init(lv_obj_t* parent, const lv_font_t* font) {
+    // === DIAGNOSTIC v0 ===
+    // Panel bg = magenta, border = bright green.
+    // If you see magenta with green border on the device → AinoAvatar::init
+    //   ran AND the panel is on top. If you also see correct face stuff, great.
+    // If you see magenta but no face → render() never paints the canvas.
+    // If you see no magenta at all → init() never runs OR something else is
+    //   layered over our panel.
+    ESP_LOGW("aino-init", "AinoAvatar::init parent=%p", parent);
+
     _pannel = std::make_unique<Container>(parent);
     _pannel->align(LV_ALIGN_CENTER, 0, 0);
     _pannel->setSize(DISP_W, DISP_H);
     _pannel->setRadius(0);
-    _pannel->setBorderWidth(0);
-    _pannel->setBgColor(lv_color_black());
+    _pannel->setBorderWidth(4);
+    _pannel->setBorderColor(lv_color_make(0, 255, 0));
+    _pannel->setBgColor(lv_color_make(255, 0, 255));
     _pannel->removeFlag(LV_OBJ_FLAG_SCROLLABLE);
 
     _renderer.init(_pannel->get());
+    ESP_LOGW("aino-init", "AinoAvatar::init canvas=%p", _renderer.getCanvas());
 
     // Stub Features that mutate _state — modifier system goes through these.
     _key_elements.leftEye  = std::make_unique<AinoEye>(&_state, /*isLeft=*/true);
