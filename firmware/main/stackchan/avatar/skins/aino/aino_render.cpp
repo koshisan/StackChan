@@ -55,6 +55,15 @@ void FaceComposer::ensureCellCount(size_t needed) {
         lv_obj_set_style_border_width(cell, 0, 0);
         lv_obj_set_style_pad_all(cell, 0, 0);
         lv_obj_clear_flag(cell, LV_OBJ_FLAG_SCROLLABLE);
+        // Phosphor bloom approximation: per-cell shadow with no x/y offset
+        // gives a warm halo around the lit pixel. Spread keeps the inner
+        // ring solid; width softens the outer edge. Opa kept moderate so
+        // overlapping shadows don't go saturated when sprite cells touch.
+        lv_obj_set_style_shadow_width(cell, 12, 0);
+        lv_obj_set_style_shadow_spread(cell, 2, 0);
+        lv_obj_set_style_shadow_offset_x(cell, 0, 0);
+        lv_obj_set_style_shadow_offset_y(cell, 0, 0);
+        lv_obj_set_style_shadow_opa(cell, LV_OPA_60, 0);
         lv_obj_add_flag(cell, LV_OBJ_FLAG_HIDDEN);
         _cells.push_back(cell);
     }
@@ -97,6 +106,8 @@ void FaceComposer::drawSpriteCells(const Sprite& s, int ccol, int trow,
             lv_obj_t* cell = _cells[cellIdx++];
             lv_obj_set_pos(cell, xLocal, yLocal);
             lv_obj_set_style_bg_color(cell, col, 0);
+            // Bloom halo: match shadow color to the fg tone of this row's parity.
+            lv_obj_set_style_shadow_color(cell, p.fg, 0);
             lv_obj_clear_flag(cell, LV_OBJ_FLAG_HIDDEN);
         }
     }
