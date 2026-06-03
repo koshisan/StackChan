@@ -2,9 +2,13 @@ menu "Xiaozhi Assistant"
 
 config OTA_URL
     string "Default OTA URL"
-    default "https://api.tenclass.net/xiaozhi/ota/"
+    default "http://docker01:8766/xiaozhi/ota/"
     help
         The application will access this URL to check for new firmwares and server address.
+        Koshi fork: points at the self-hosted xiaozhi-esp32-server on docker01.
+        Plain HTTP is fine for LAN-only operation; ESP-IDF's esp_http_client
+        accepts both http:// and https:// transparently. Upstream default was
+        https://api.tenclass.net/xiaozhi/ota/.
 
 choice
     prompt "Flash Assets"
