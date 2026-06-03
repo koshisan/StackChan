@@ -13,14 +13,18 @@ namespace stackchan::avatar::aino {
 inline constexpr int DISP_W = 320;
 inline constexpr int DISP_H = 240;
 
-// Visible face/screen region — everything outside is the plastic bezel (black).
-inline constexpr int FACE_W = 240;
-inline constexpr int FACE_H = 180;
-inline constexpr int FACE_X = 40;       // FACE.X
-inline constexpr int FACE_Y = 30;       // FACE.Y
-inline constexpr int FACE_CX = 160;     // centre
+// Visible face/screen region. The Aino design HTML specified a 240×180 lit
+// area on a 320×240 panel with a black "robot housing" bezel — but on the
+// actual M5Stack Core2 display the case ALREADY provides a plastic bezel,
+// and shrinking the lit area further makes the face look small and lost.
+// So: lit area now fills the full panel, corners stay slightly rounded.
+inline constexpr int FACE_W = 320;
+inline constexpr int FACE_H = 240;
+inline constexpr int FACE_X = 0;
+inline constexpr int FACE_Y = 0;
+inline constexpr int FACE_CX = 160;
 inline constexpr int FACE_CY = 120;
-inline constexpr int FACE_R  = 18;      // rounded-rect corner radius (CRT corner)
+inline constexpr int FACE_R  = 12;      // mild CRT corner
 
 // Sprite cell (art-pixel) size in device pixels.
 inline constexpr int ART = 8;
