@@ -2,60 +2,62 @@
  * SPDX-FileCopyrightText: 2026 koshisan
  * SPDX-License-Identifier: MIT
  *
- * Aino renderer — owns an LVGL canvas with an off-screen RGB565 buffer the
- * size of the screen (320×240). Each render() call repaints the entire canvas
- * from the FaceState snapshot following the design's draw order:
- *   bezel → bg → row-mask-bg → glow blobs → sprite cells → row-mask-sprite → vignette
+ * Aino face composer — v2 using LVGL Container hierarchy instead of a
+ * direct-buffer canvas (which never showed our writes in LVGL 9.4).
  *
- * The whole canvas is then flushed to the LVGL parent once per state-change
- * (~30 fps when animating, idle otherwise).
+ * Layout:
+ *   panel (320×240, parent, black)
+ *   ├── face Container (240×180 at FACE_X/Y, bg = palette.bg, radius = FACE_R)
+ *   ├── row-mask strips (240×8 each at odd ART-row offsets, bg = palette.bgDim)
+ *   └── pool of sprite-cell Containers (8×8 each, bg = palette.fg / fgDim)
+ *
+ * On every state change, the row-mask strips re-tint and the sprite-cell pool
+ * is repositioned/re-tinted. Pool size is bounded by the largest possible
+ * lit-cell count across all 10 emotions.
+ *
+ * No PSRAM allocations; LVGL handles all rendering and refresh.
  */
 #pragma once
 #include "aino_face_state.h"
 #include "aino_geometry.h"
 #include <lvgl.h>
+#include <smooth_lvgl.hpp>
+#include <memory>
+#include <vector>
 #include <cstdint>
 
 namespace stackchan::avatar::aino {
 
-class FaceRenderer {
+class FaceComposer {
 public:
-    FaceRenderer() = default;
-    ~FaceRenderer();
-    FaceRenderer(const FaceRenderer&)            = delete;
-    FaceRenderer& operator=(const FaceRenderer&) = delete;
+    FaceComposer() = default;
+    ~FaceComposer();
+    FaceComposer(const FaceComposer&)            = delete;
+    FaceComposer& operator=(const FaceComposer&) = delete;
 
-    /** Attach to LVGL parent; allocates the canvas buffer (~150KB RGB565). */
+    /** Build the static scaffolding (face container + row-mask strips) under `parent`. */
     void init(lv_obj_t* parent);
 
-    /** Repaint the canvas from `state`. No-op if generation unchanged. */
+    /** Re-tint background + redraw sprite cells from FaceState. */
     void render(const FaceState& state);
 
-    /** Force-redraw next call regardless of generation. */
+    /** Force re-render on next render() call. */
     void invalidate() { _lastGen = 0xFFFFFFFF; }
 
-    lv_obj_t* getCanvas() const { return _canvas; }
+    lv_obj_t* getFaceContainer() const { return _face; }
 
 private:
-    lv_obj_t* _canvas             = nullptr;
-    lv_color_t* _buf              = nullptr;   // points into PSRAM-allocated buffer
-    uint32_t _lastGen             = 0xFFFFFFFF;
+    lv_obj_t* _parent          = nullptr;
+    lv_obj_t* _face            = nullptr;        // 240×180 lit area
+    std::vector<lv_obj_t*> _maskStrips;          // odd-row 240×8 strips
+    std::vector<lv_obj_t*> _cells;               // dynamic pool of 8×8 sprite cells
+    uint32_t _lastGen          = 0xFFFFFFFF;
 
-    // ----- draw primitives operating on _buf -----
-    inline void putPixel(int x, int y, lv_color_t c);
-    void fillRect(int x, int y, int w, int h, lv_color_t c);
-    void fillFaceBackground(const Palette& p);
-    void applyRowMaskBackground(const Palette& p);
-    void blitGlow(int cx, int cy, const Palette& p, float scale);
-    void blitSpriteCells(const Sprite& s, int ccol, int trow, bool mirror,
-                         const Palette& p);
-    void drawSprite(const Sprite& s, int ccol, int trow, bool mirror,
-                    const Palette& p);
-    void drawEyes(const FaceState& fs);
-    void drawMouth(const FaceState& fs);
-    void drawDecorations(const FaceState& fs);
-    void applyVignette();
-    void clipToFaceRect();   // round-rect clip for the CRT corners
+    void ensureCellCount(size_t needed);
+    void drawSpriteCells(const Sprite& s, int ccol, int trow, bool mirror,
+                         const Palette& p, size_t& cellIdx);
+    void hideRemainingCells(size_t fromIdx);
+    void retintBackground(const Palette& p);
 };
 
 }  // namespace stackchan::avatar::aino

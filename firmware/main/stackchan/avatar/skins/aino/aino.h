@@ -35,17 +35,15 @@ public:
     void update() override;
 
     aino::FaceState& faceState() { return _state; }
-    aino::FaceRenderer& renderer() { return _renderer; }
-
-    lv_obj_t* getCanvas() const { return _renderer.getCanvas(); }
+    aino::FaceComposer& composer() { return _composer; }
 
     /** Same shape as DefaultAvatar::getPanel() — call sites swap transparently. */
     uitk::lvgl_cpp::Container* getPanel() const { return _pannel.get(); }
 
 private:
     std::unique_ptr<uitk::lvgl_cpp::Container> _pannel;
-    aino::FaceState   _state;
-    aino::FaceRenderer _renderer;
+    aino::FaceState     _state;
+    aino::FaceComposer  _composer;
 };
 
 namespace aino {
